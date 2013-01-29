@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'sinatra'
 require 'mongoid'
+require 'json'
 # this is now using this https://github.com/treeder/rack-flash which is
 # installed in the Gemfile as 'rack-flash3'
 require 'rack-flash'
@@ -26,7 +27,10 @@ configure :production do
 end
 set :mongo_logfile, File.join("log", "mongo-driver-#{settings.environment}.log")
 
-use Rack::Session::Cookie, :secret => 'thisisadifferentsecret'
+use Rack::Session::Cookie, :secret => 'thisisadifferentsecret',
+                           :key => 'content.session',
+                           :domain => '.platform.local',
+                           :path => '/'
 use Rack::Flash
 
 enable :sessions
@@ -46,6 +50,7 @@ get '/' do
 end
 
 get '/collections/:uid' do
+  logger.info('when calling collections/:uid, the session[:uid] = ' + session[:uid].to_s)
   if session[:uid].nil?
     token_value = request.cookies["token"]
     if token_value.nil?
@@ -67,5 +72,11 @@ get '/collections/:uid' do
   # access
   @collection = Collection.where(:uid => params[:uid]).first
   erb :'collections/index'
+end
+
+# TODO not exactly RESTful
+get '/session/destroy' do
+  status 200
+  {:message => "destroyed"}.to_json
 end
 
