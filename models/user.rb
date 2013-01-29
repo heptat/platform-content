@@ -1,10 +1,10 @@
 require 'mongoid'
 
+# this will have content specific user fields
 class User
   include Mongoid::Document
 
   field :uid, type: String
-  field :collections, type: Array
 
   validates_presence_of       :uid
 
