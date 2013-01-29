@@ -50,7 +50,6 @@ get '/' do
 end
 
 get '/collections/:uid' do
-  logger.info('when calling collections/:uid, the session[:uid] = ' + session[:uid].to_s)
   if session[:uid].nil?
     token_value = request.cookies["token"]
     if token_value.nil?
@@ -66,6 +65,9 @@ get '/collections/:uid' do
     end
     # token is genuine so set session:
     session[:uid] = @token["uid"]
+  # the session still exists but the token cookie has been destroyed:
+  elsif request.cookies["token"].nil?
+    redirect 'http://app.platform.local'
   end
   @current_user = User.where(:uid => session[:uid]).first
   # TODO this needs to ask the app what collections this user is allowed to
@@ -76,6 +78,7 @@ end
 
 # TODO not exactly RESTful
 get '/session/destroy' do
+  session[:uid] = nil
   status 200
   {:message => "destroyed"}.to_json
 end
